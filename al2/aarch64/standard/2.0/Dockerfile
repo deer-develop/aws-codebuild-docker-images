@@ -125,45 +125,37 @@ ENV PATH="/root/.phpenv/shims:/root/.phpenv/bin:$PATH"
 FROM tools AS runtimes_1
 
 #****************      JAVA     ****************************************************
-ENV JAVA_11_HOME="/usr/lib/jvm/java-11-amazon-corretto.aarch64" \
-    JDK_11_HOME="/usr/lib/jvm/java-11-amazon-corretto.aarch64" \
-    JRE_11_HOME="/usr/lib/jvm/java-11-amazon-corretto.aarch64" \
-    JAVA_8_HOME="/usr/lib/jvm/java-1.8.0-amazon-corretto.aarch64" \
-    JDK_8_HOME="/usr/lib/jvm/java-1.8.0-amazon-corretto.aarch64" \
-    JRE_8_HOME="/usr/lib/jvm/java-1.8.0-amazon-corretto.aarch64/jre" \
-    ANT_VERSION=1.10.8 \
+ENV JAVA_17_HOME="/usr/lib/jvm/java-17-amazon-corretto.aarch64" \
+    JDK_17_HOME="/usr/lib/jvm/java-17-amazon-corretto.aarch64" \
+    JRE_17_HOME="/usr/lib/jvm/java-17-amazon-corretto.aarch64" \
+    ANT_VERSION=1.10.12 \
     MAVEN_HOME="/opt/maven" \
-    MAVEN_VERSION=3.6.3 \
-    INSTALLED_GRADLE_VERSIONS="5.6.4 6.5" \
-    GRADLE_VERSION=6.5 \
-    SBT_VERSION=1.3.13 \
+    MAVEN_VERSION=3.8.6 \
+    INSTALLED_GRADLE_VERSIONS="7.4.2" \
+    GRADLE_VERSION=7.4.2 \
+    SBT_VERSION=1.6.2 \
     GRADLE_PATH="$SRC_DIR/gradle" \
-    ANT_DOWNLOAD_SHA512="4d80dc6ba23eeec7769085ddb00261b7480b596b56c6e69aa221391acbfb7338eb5855179c88222c8021095ef1f64f43caf2b4f90e8305d7c3128026d4258d06" \
-    MAVEN_DOWNLOAD_SHA512="c35a1803a6e70a126e80b2b3ae33eed961f83ed74d18fcd16909b2d44d7dada3203f1ffe726c17ef8dcca2dcaa9fca676987befeadc9b9f759967a8cb77181c0" \
-    GRADLE_DOWNLOADS_SHA256="c9910513d0eed63cd8f5c7fec4cb4a05731144770104a0871234a4edc3ba3cef 6.5\nabc10bcedb58806e8654210f96031db541bcd2d6fc3161e81cb0572d6a15e821 5.6.4" \
-    SBT_DOWNLOAD_SHA256="854154de27a7d8c13b5a0f9a297cd1f254cc13b44588dae507e5d4fb2741bd22"
+    ANT_DOWNLOAD_SHA512="2287dc5cfc21043c14e5413f9afb1c87c9f266ec2a9ba2d3bf2285446f6e4ccb59b558bf2e5c57911a05dfa293c7d5c7ad60ac9f744ba11406f4e6f9a27b2403" \
+    MAVEN_DOWNLOAD_SHA512="f790857f3b1f90ae8d16281f902c689e4f136ebe584aba45e4b1fa66c80cba826d3e0e52fdd04ed44b4c66f6d3fe3584a057c26dfcac544a60b301e6d0f91c26" \
+    GRADLE_DOWNLOADS_SHA256="e6d864e3b5bc05cc62041842b306383fc1fefcec359e70cebb1d470a6094ca82 7.4.2" \
+    SBT_DOWNLOAD_SHA256="637637b6c4e6fa04ab62cd364061e32b12480b09001cd23303df62b36fadd440" \
+    LOG4J_UNSAFE_VERSIONS="2.11.1 1.2.8"
 
 ARG MAVEN_CONFIG_HOME="/root/.m2"
-ENV JAVA_HOME="$JAVA_11_HOME" \
-    JDK_HOME="$JDK_11_HOME" \
-    JRE_HOME="$JRE_11_HOME"
-
-RUN set -ex \
-    # Install Amazon Corretto 8
-    && yum install -yq java-1.8.0-amazon-corretto-devel \
-    # Ensure Java cacerts symlink points to valid location
-    && update-ca-trust
+ENV JAVA_HOME="$JAVA_17_HOME" \
+    JDK_HOME="$JDK_17_HOME" \
+    JRE_HOME="$JRE_17_HOME"
 
 RUN set -x \
-    # Install Amazon Corretto 11
-    # Note: We will use update-alternatives to make sure JDK11 has higher priority for all the tools
-    && yum install -yq java-11-amazon-corretto \
+    # Install Amazon Corretto 17
+    && yum install -yq java-17-amazon-corretto-devel \
+    && update-ca-trust \
     && for tool_path in $JAVA_HOME/bin/*; do \
           tool=`basename $tool_path`; \
           update-alternatives --install /usr/bin/$tool $tool $tool_path 10000; \
           update-alternatives --set $tool $tool_path; \
         done \
-     && rm $JAVA_HOME/lib/security/cacerts && ln -s /etc/pki/java/cacerts $JAVA_HOME/lib/security/cacerts \
+    && rm $JAVA_HOME/lib/security/cacerts && ln -s /etc/pki/java/cacerts $JAVA_HOME/lib/security/cacerts \
     # Install Ant
     && curl -LSso /var/tmp/apache-ant-$ANT_VERSION-bin.tar.gz https://archive.apache.org/dist/ant/binaries/apache-ant-$ANT_VERSION-bin.tar.gz  \
     && echo "$ANT_DOWNLOAD_SHA512 /var/tmp/apache-ant-$ANT_VERSION-bin.tar.gz" | sha512sum -c - \
@@ -188,7 +180,9 @@ RUN set -ex \
        && echo -e "$GRADLE_DOWNLOADS_SHA256" | grep "$version" | sed "s|$version|$GRADLE_PATH/gradle-$version-all.zip|" | sha256sum -c - \
        && rm "$GRADLE_PATH/gradle-$version-all.zip" \
        && mkdir "/tmp/gradle-$version" \
+       && "/usr/local/gradle-$version/bin/gradle" -p "/tmp/gradle-$version" init \
        && "/usr/local/gradle-$version/bin/gradle" -p "/tmp/gradle-$version" wrapper \
+       # Android Studio uses the "-all" distribution for it's wrapper script.
        && perl -pi -e "s/gradle-$version-bin.zip/gradle-$version-all.zip/" "/tmp/gradle-$version/gradle/wrapper/gradle-wrapper.properties" \
        && "/tmp/gradle-$version/gradlew" -p "/tmp/gradle-$version" init \
        && rm -rf "/tmp/gradle-$version" \
@@ -201,12 +195,13 @@ RUN set -ex \
     && curl -fSL "https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz" -o sbt.tgz \
     && echo "${SBT_DOWNLOAD_SHA256} *sbt.tgz" | sha256sum -c - \
     && tar xzf sbt.tgz -C /usr/local/bin/ \
-    && rm sbt.tgz
+    && rm sbt.tgz \
+    && for version in $LOG4J_UNSAFE_VERSIONS; do find / -name log4j*-$version.jar | xargs rm -f; done
+
 ENV PATH "/usr/local/bin/sbt/bin:$PATH"
-RUN sbt version
+RUN sbt version -Dsbt.rootdir=true
 # Cleanup
-RUN rm -fr /tmp/* /var/tmp/* \
-    && yum clean all
+RUN rm -fr /tmp/* /var/tmp/*
 #****************     END JAVA     ****************************************************
 
 

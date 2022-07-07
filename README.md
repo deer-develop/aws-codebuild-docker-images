@@ -1,5 +1,7 @@
 # AWS CodeBuild curated Docker images
 
+- aws/codebuild/amazonlinux2-aarch64-standard:2.0 이미지에 java 17을 추가하기 위해서 fork
+
 This repository holds Dockerfiles of official AWS CodeBuild curated Docker images. Please refer to [the AWS CodeBuild User Guide](http://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref.html) for list of environments supported by AWS CodeBuild.
 
 ![Build Status](https://codebuild.us-west-2.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiSkJibVVQVEpvUms1cmw3YVlnU1hSdkpBQ0c5SFgyTkJXMFBFdEU2SWtySHREcUlUVlRhbW4zMEd3NlhsOWIzUWgvRkxhUWVSSTFPZGNNakNHRVNLalY0PSIsIml2UGFyYW1ldGVyU3BlYyI6IlV0QjBRZXRvS0F5dE5vbTciLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)
@@ -10,22 +12,22 @@ The master branch will sometimes have changes that are still in the process of b
 
 Steps to build Standard 6.0 image
 
-* Run `git clone https://github.com/aws/aws-codebuild-docker-images.git` to download this repository to your local machine
-* Run `cd ubuntu/standard/6.0` to change the directory in your local workspace. This is the location of the Standard 5.0 Dockerfile with Ubuntu base.
-* Run `docker build -t aws/codebuild/standard:6.0 .` to build Docker image locally
+* Run `git clone https://github.com/deer-develop/aws-codebuild-docker-images.git` to download this repository to your local machine
+* Run `cd al2/aarch64/standard/2.0` to change the directory in your local workspace. This is the location of the Standard 2.0 Dockerfile with Amazon Linux 2 base.
+* Run `docker build -t aws/codebuild/amazonlinux2-aarch64-standard:2.0 .` to build Docker image locally
 
 To poke around in the image interactively, build it and run:
-`docker run -it --entrypoint sh aws/codebuild/standard:6.0 -c bash`
+`docker run -it --entrypoint sh aws/codebuild/amazonlinux2-aarch64-standard:2.0 -c bash`
 
 To let the Docker daemon start up in the container, build it and run:
-`docker run -it --privileged aws/codebuild/standard:6.0 bash`
+`docker run -it --privileged aws/codebuild/amazonlinux2-aarch64-standard:2.0 bash`
 
 ```
-$ git clone https://github.com/aws/aws-codebuild-docker-images.git
+$ git clone https://github.com/deer-develop/aws-codebuild-docker-images.git
 $ cd aws-codebuild-docker-images
-$ cd ubuntu/standard/6.0
-$ docker build -t aws/codebuild/standard:6.0 .
-$ docker run -it --entrypoint sh aws/codebuild/standard:6.0 -c bash
+$ cd cd al2/aarch64/standard/2.0
+$ docker build -t aws/codebuild/amazonlinux2-aarch64-standard:2.0 .
+$ docker run -it --entrypoint sh aws/codebuild/amazonlinux2-aarch64-standard:2.0 -c bash
 ```
 
 ### Image maintenance
